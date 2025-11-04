@@ -52,28 +52,6 @@ El objetivo del proyecto es simular una tienda real de pastelería digital, enfo
 
 ---
 
-## 🧠 Arquitectura del proyecto
-
-El proyecto sigue una **estructura modular y limpia** orientada a MVVM:
-
-app/
-├── data/
-│ ├── model/ → Modelos de datos (User, Pastel)
-│ ├── database/ → DataStore para sesión de usuario
-│ ├── repository/ → Lógica de autenticación (AuthRepository)
-│
-├── ui/
-│ ├── pages/ → Pantallas principales (Login, Perfil, Productos, etc.)
-│ ├── theme/ → Configuración de colores, tipografía y estilos
-│
-├── navigation/ → Estructura del NavHost y rutas
-├── viewmodel/ → ViewModels (por ejemplo, ProductoViewModel)
-├── view/ → Componentes UI reutilizables
-└── MainActivity.kt → Punto de entrada de la aplicación
-
-
----
-
 ## ⚙️ Requisitos de ejecución
 
 - **Android Studio Giraffe / Koala o superior**
