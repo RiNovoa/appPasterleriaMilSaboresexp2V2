@@ -65,7 +65,7 @@ class AuthRepository(private val context: Context) {
         }
     }
 
-    suspend fun register(nombre: String, apellido: String, correo: String, contrasena: String): Boolean {
+    suspend fun register(nombre: String, apellido: String, correo: String, contrasena: String, fechaNacimiento: String, direccion: String): Boolean {
         val users = readUsers()
         if (users.any { it.correo.equals(correo, ignoreCase = true) }) {
             return false
@@ -77,7 +77,9 @@ class AuthRepository(private val context: Context) {
             apellido = apellido,
             correo = correo,
             contrasena = contrasena,
-            role = "user"
+            role = "user",
+            fechaNacimiento = fechaNacimiento,
+            direccion = direccion
         )
         users.add(newUser)
         writeUsers(users)
