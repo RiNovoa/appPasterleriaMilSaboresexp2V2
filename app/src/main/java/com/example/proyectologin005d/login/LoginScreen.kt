@@ -1,5 +1,7 @@
 package com.example.proyectologin005d.login
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -75,6 +78,16 @@ fun LoginScreen(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val assetManager = LocalContext.current.assets
+                val inputStream = assetManager.open("img/logo.png")
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Logo",
+                    modifier = Modifier.height(100.dp)
+                )
+                Spacer(Modifier.height(16.dp))
                 // Título estilo Pacifico
                 Text(
                     text = "Pastelería 1000 Sabores",
