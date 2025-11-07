@@ -1,7 +1,11 @@
+
 package com.example.proyectologin005d.ui.pages
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,12 +13,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectologin005d.data.Pastel
+import kotlinx.coroutines.delay
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.io.IOException
@@ -33,6 +39,20 @@ fun IndexScreen(navController: NavController) {
     val context = LocalContext.current
     val pasteles = remember { loadPasteles(context) }
     val scroll = rememberScrollState()
+
+    var imageVisible by remember { mutableStateOf(false) }
+    val imageAlpha by animateFloatAsState(
+        targetValue = if (imageVisible) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    LaunchedEffect(Unit) {
+        delay(200)
+        imageVisible = true
+    }
 
     Column(
         modifier = Modifier
@@ -68,18 +88,38 @@ fun IndexScreen(navController: NavController) {
                 .fillMaxWidth()
                 .height(200.dp)
                 .padding(vertical = 8.dp)
-                .clip(RoundedCornerShape(12.dp)),
+                .clip(RoundedCornerShape(12.dp))
+                .alpha(imageAlpha),
             contentScale = ContentScale.Crop
         )
 
         // Mensaje de bienvenida
+        var textVisible by remember { mutableStateOf(false) }
+        val textScale by animateFloatAsState(
+            targetValue = if (textVisible) 1f else 0.8f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        )
+
+        LaunchedEffect(Unit) {
+            delay(400) // Delay to start after image
+            textVisible = true
+        }
+
         Text(
             text = "Bienvenidos al dulce mundo de 1000 Sabores. " +
                     "Aquí cada pastel es una historia, cada sabor un recuerdo y cada visita una sonrisa.",
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
             color = Color(0xFF5E5E5E),
-            modifier = Modifier.padding(vertical = 12.dp)
+            modifier = Modifier
+                .padding(vertical = 12.dp)
+                .graphicsLayer {
+                    scaleX = textScale
+                    scaleY = textScale
+                }
         )
 
         HorizontalDivider(
@@ -96,12 +136,28 @@ fun IndexScreen(navController: NavController) {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        pasteles.take(4).forEach { pastel ->
+        pasteles.take(4).forEachIndexed { index, pastel ->
+            var cardVisible by remember { mutableStateOf(false) }
+            val cardOffset by animateFloatAsState(
+                targetValue = if (cardVisible) 0f else 100f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessVeryLow
+                ),
+                label = ""
+            )
+
+            LaunchedEffect(Unit) {
+                delay(200L * index)
+                cardVisible = true
+            }
+
             ProductCard(
                 image = pastel.imagen,
                 nombre = pastel.nombre,
                 precio = "$${pastel.precio}",
-                descripcion = pastel.descripcion
+                descripcion = pastel.descripcion,
+                modifier = Modifier.offset(y = cardOffset.dp)
             )
         }
 
@@ -122,9 +178,9 @@ fun IndexScreen(navController: NavController) {
 }
 
 @Composable
-fun ProductCard(image: String, nombre: String, precio: String, descripcion: String) {
+fun ProductCard(image: String, nombre: String, precio: String, descripcion: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp),
         shape = RoundedCornerShape(12.dp),

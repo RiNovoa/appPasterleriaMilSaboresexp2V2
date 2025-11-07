@@ -22,8 +22,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.proyectologin005d.viewmodel.CartViewModel
 
-// Transformación para el número de tarjeta (#### #### #### ####)
 class CardNumberVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val trimmed = if (text.text.length >= 16) text.text.take(16) else text.text
@@ -53,7 +53,6 @@ class CardNumberVisualTransformation : VisualTransformation {
     }
 }
 
-// Transformación para la fecha de expiración (MM/AA)
 class ExpiryDateVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val trimmed = if (text.text.length >= 4) text.text.take(4) else text.text
@@ -81,7 +80,7 @@ class ExpiryDateVisualTransformation : VisualTransformation {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentScreen(navController: NavController) {
+fun PaymentScreen(navController: NavController, cartViewModel: CartViewModel) {
     var cardName by remember { mutableStateOf("") }
     var cardNumber by remember { mutableStateOf("") }
     var expiryDate by remember { mutableStateOf("") }
@@ -250,7 +249,9 @@ fun PaymentScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* Lógica de pago */ },
+            onClick = {
+                navController.navigate("boleta")
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = isFormValid,
             shape = RoundedCornerShape(8.dp),

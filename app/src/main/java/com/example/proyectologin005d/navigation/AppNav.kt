@@ -1,5 +1,6 @@
 package com.example.proyectologin005d.navigation
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,6 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.proyectologin005d.login.LoginScreen
+import com.example.proyectologin005d.ui.boleta.BoletaScreen
 import com.example.proyectologin005d.ui.login.RegisterScreen
 import com.example.proyectologin005d.ui.pages.*
 import com.example.proyectologin005d.viewmodel.CartViewModel
@@ -28,6 +30,7 @@ sealed class Screen(val route: String, val label: String, val icon: @Composable 
     object Contacto  : Screen("contactanos", "Contacto", { Icon(Icons.Default.Mail,         null) })
     object Productos : Screen("productos",   "Productos",{ Icon(Icons.Default.Cake,         null) })
     object Carrito   : Screen("carrito",     "Carrito",  { Icon(Icons.Default.ShoppingCart, null) })
+    object Historial : Screen("historial",   "Historial",{ Icon(Icons.Default.History,      null) })
     object Perfil    : Screen("perfil",      "Perfil",   { Icon(Icons.Default.Person,       null) })
 }
 
@@ -36,8 +39,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
     val cartViewModel: CartViewModel = viewModel()
 
     val screens = listOf(
-        Screen.Index, Screen.Nosotros, Screen.Contacto,
-        Screen.Productos, Screen.Carrito, Screen.Perfil
+        Screen.Index, Screen.Nosotros, Screen.Contacto, Screen.Productos, Screen.Carrito, Screen.Historial, Screen.Perfil
     )
     val screenRoutes = screens.map { it.route }.toSet()
 
@@ -47,7 +49,11 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
 
     Scaffold(
         bottomBar = {
-            if (showBottomBar) {
+            AnimatedVisibility(
+                visible = showBottomBar,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+            ) {
                 BottomAppBar {
                     val currentDestination = backStackEntry?.destination
                     screens.forEach { screen ->
@@ -73,10 +79,18 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
         NavHost(
             navController = navController,
             startDestination = "login",
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }) + fadeIn() },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
         ) {
             // Auth
-            composable("login") { LoginScreen(navController) }
+            composable(
+                "login",
+                enterTransition = { fadeIn() },
+                exitTransition = { fadeOut() }
+            ) { LoginScreen(navController) }
             composable("register") { RegisterScreen(navController) }
 
             // Contenido con BottomBar
@@ -85,8 +99,9 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
             composable("contactanos") { ContactoScreen() }
             composable("productos")   { ProductosScreen(cartViewModel, navController) }
             composable("carrito")     { CarritoScreen(cartViewModel, navController) }
+            composable("historial")   { HistorialScreen(navController) }
             composable("perfil")      { PerfilScreen(navController) }
-            composable("payment")     { PaymentScreen(navController) }
+            composable("payment")     { PaymentScreen(navController, cartViewModel) }
 
             composable(
                 "productDetail/{productId}",
@@ -96,6 +111,10 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
                 if (productId != null) {
                     ProductDetailScreen(navController = navController, productId = productId)
                 }
+            }
+
+            composable("boleta") {
+                BoletaScreen(navController = navController, cartViewModel = cartViewModel)
             }
         }
     }

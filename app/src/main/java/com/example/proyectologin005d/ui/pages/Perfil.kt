@@ -13,39 +13,15 @@ import androidx.activity.result.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +37,7 @@ import androidx.navigation.NavController
 import com.example.proyectologin005d.R
 import com.example.proyectologin005d.data.model.User
 import com.example.proyectologin005d.data.repository.AuthRepository
+import com.example.proyectologin005d.ui.pages.common.AnimatedContent
 import kotlinx.coroutines.launch
 
 @Composable
@@ -117,74 +94,75 @@ fun PerfilScreen(navController: NavController) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Card de perfil
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+            AnimatedContent { 
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)
                 ) {
-                    val imageModifier = Modifier
-                        .size(130.dp)
-                        .clip(CircleShape)
-                        .border(4.dp, cs.primary, CircleShape)
-                        .background(cs.secondary.copy(alpha = 0.1f))
-
-                    if (imageBitmap != null) {
-                        Image(
-                            bitmap = imageBitmap!!.asImageBitmap(),
-                            contentDescription = "Foto de perfil",
-                            modifier = imageModifier,
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(R.drawable.ic_default_profile),
-                            contentDescription = "Foto de perfil por defecto",
-                            modifier = imageModifier.padding(12.dp)
-                        )
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-
-                    Text(
-                        text = user?.nombre ?: "Nombre de Usuario",
-                        style = ty.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = cs.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = user?.correo ?: "correo@ejemplo.com",
-                        style = ty.bodyMedium,
-                        color = cs.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-
-                    Spacer(Modifier.height(24.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
-                            Icon(Icons.Default.PhotoLibrary, contentDescription = "Galería", Modifier.size(18.dp))
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text("Galería")
+                        val imageModifier = Modifier
+                            .size(130.dp)
+                            .clip(CircleShape)
+                            .border(4.dp, cs.primary, CircleShape)
+                            .background(cs.secondary.copy(alpha = 0.1f))
+
+                        if (imageBitmap != null) {
+                            Image(
+                                bitmap = imageBitmap!!.asImageBitmap(),
+                                contentDescription = "Foto de perfil",
+                                modifier = imageModifier,
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(R.drawable.ic_default_profile),
+                                contentDescription = "Foto de perfil por defecto",
+                                modifier = imageModifier.padding(12.dp)
+                            )
                         }
-                        Button(onClick = {
-                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                cameraLauncher.launch()
-                            } else {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Text(
+                            text = user?.nombre ?: "Nombre de Usuario",
+                            style = ty.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = cs.onSurfaceVariant
+                        )
+
+                        Text(
+                            text = user?.correo ?: "correo@ejemplo.com",
+                            style = ty.bodyMedium,
+                            color = cs.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+                        ) {
+                            OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                                Icon(Icons.Default.PhotoLibrary, contentDescription = "Galería", Modifier.size(18.dp))
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text("Galería")
                             }
-                        }) {
-                            Icon(Icons.Default.CameraAlt, contentDescription = "Cámara", Modifier.size(18.dp))
-                            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                            Text("Cámara")
+                            Button(onClick = {
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                    cameraLauncher.launch()
+                                } else {
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                }
+                            }) {
+                                Icon(Icons.Default.CameraAlt, contentDescription = "Cámara", Modifier.size(18.dp))
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text("Cámara")
+                            }
                         }
                     }
                 }
@@ -192,50 +170,53 @@ fun PerfilScreen(navController: NavController) {
 
             Spacer(Modifier.height(24.dp))
 
-            // Card de beneficios
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(2.dp),
-                colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.6f))
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Beneficios Activos",
-                        style = ty.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = cs.primary,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    HorizontalDivider(color = cs.outline.copy(alpha = 0.5f))
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = "• 10% de descuento permanente (CUPÓN: FELICES50)\n• Regalo especial de cumpleaños al registrar correo Duoc.",
-                        style = ty.bodyMedium,
-                        lineHeight = 24.sp,
-                        color = cs.onSurfaceVariant
-                    )
+            AnimatedContent { 
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(2.dp),
+                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.6f))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Beneficios Activos",
+                            style = ty.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = cs.primary,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        HorizontalDivider(color = cs.outline.copy(alpha = 0.5f))
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = "• 10% de descuento permanente (CUPÓN: FELICES50)\n• Regalo especial de cumpleaños al registrar correo Duoc.",
+                            style = ty.bodyMedium,
+                            lineHeight = 24.sp,
+                            color = cs.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             Spacer(Modifier.height(32.dp))
 
-            val scope = rememberCoroutineScope()
-            Button(
-                onClick = {
-                    scope.launch {
-                        authRepository.logout()
-                        navController.navigate("login") { popUpTo(0) { inclusive = true } }
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = cs.errorContainer,
-                    contentColor = cs.onErrorContainer
-                ),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(50.dp)
-            ) {
-                Text("Cerrar Sesión", style = ty.titleMedium)
+            AnimatedContent {
+                val scope = rememberCoroutineScope()
+                Button(
+                    onClick = {
+                        scope.launch {
+                            authRepository.logout()
+                            navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = cs.errorContainer,
+                        contentColor = cs.onErrorContainer
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(50.dp)
+                ) {
+                    Text("Cerrar Sesión", style = ty.titleMedium)
+                }
             }
         }
     }
