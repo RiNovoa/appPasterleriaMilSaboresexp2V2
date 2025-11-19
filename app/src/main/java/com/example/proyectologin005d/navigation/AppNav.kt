@@ -27,6 +27,7 @@ import com.example.proyectologin005d.viewmodel.CartViewModel
 sealed class Screen(val route: String, val label: String, val icon: @Composable () -> Unit) {
     object Index     : Screen("index",       "Inicio",   { Icon(Icons.Default.Home,         null) })
     object Nosotros  : Screen("nosotros",    "Nosotros", { Icon(Icons.Default.Info,         null) })
+    object News      : Screen("news",        "Noticias", { Icon(Icons.Default.Article,      null) })
     object Contacto  : Screen("contactanos", "Contacto", { Icon(Icons.Default.Mail,         null) })
     object Productos : Screen("productos",   "Productos",{ Icon(Icons.Default.Cake,         null) })
     object Carrito   : Screen("carrito",     "Carrito",  { Icon(Icons.Default.ShoppingCart, null) })
@@ -39,7 +40,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
     val cartViewModel: CartViewModel = viewModel()
 
     val screens = listOf(
-        Screen.Index, Screen.Nosotros, Screen.Contacto, Screen.Productos, Screen.Carrito, Screen.Historial, Screen.Perfil
+        Screen.Index, Screen.Nosotros, Screen.News, Screen.Contacto, Screen.Productos, Screen.Carrito, Screen.Historial, Screen.Perfil
     )
     val screenRoutes = screens.map { it.route }.toSet()
 
@@ -96,6 +97,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
             // Contenido con BottomBar
             composable("index")       { IndexScreen(navController) }
             composable("nosotros")    { Nosotros() }
+            composable("news")        { NewsScreen(navController) }
             composable("contactanos") { ContactoScreen() }
             composable("productos")   { ProductosScreen(cartViewModel, navController) }
             composable("carrito")     { CarritoScreen(cartViewModel, navController) }
