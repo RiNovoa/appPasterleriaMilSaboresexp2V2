@@ -60,13 +60,18 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6") // Asegurando esta
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
+    // Testing
     testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.8") // Para simular objetos
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1") // Para corrutinas
+    testImplementation("androidx.arch.core:core-testing:2.2.0") // Para LiveData/StateFlow
+
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 
