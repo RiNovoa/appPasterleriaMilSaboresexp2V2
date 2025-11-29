@@ -22,6 +22,7 @@ import com.example.proyectologin005d.login.LoginScreen
 import com.example.proyectologin005d.ui.boleta.BoletaScreen
 import com.example.proyectologin005d.ui.login.RegisterScreen
 import com.example.proyectologin005d.ui.pages.*
+import com.example.proyectologin005d.ui.pages.common.NewsScreen
 import com.example.proyectologin005d.viewmodel.CartViewModel
 
 sealed class Screen(val route: String, val label: String, val icon: @Composable () -> Unit) {
@@ -85,6 +86,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
             exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }) + fadeOut() },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }) + fadeIn() },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }) + fadeOut() }
+
         ) {
             // Auth
             composable(
@@ -97,7 +99,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
             // Contenido con BottomBar
             composable("index")       { IndexScreen(navController) }
             composable("nosotros")    { Nosotros() }
-            composable("news")        { NewsScreen(navController) }
+            composable("news")        { NewsScreen() }
             composable("contactanos") { ContactoScreen() }
             composable("productos")   { ProductosScreen(cartViewModel, navController) }
             composable("carrito")     { CarritoScreen(cartViewModel, navController) }

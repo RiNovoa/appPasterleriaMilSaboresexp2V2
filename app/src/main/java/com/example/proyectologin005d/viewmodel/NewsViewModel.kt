@@ -1,5 +1,6 @@
 package com.example.proyectologin005d.viewmodel
 
+import android.util.Log // <--- 1. Agrega este import
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectologin005d.data.model.Post
@@ -8,29 +9,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// ViewModel que mantiene el estado de los datos obtenidos
 class NewsViewModel : ViewModel() {
 
     private val repository = NewsRepository()
 
-    // Flujo mutable que contiene la lista de posts
     private val _postList = MutableStateFlow<List<Post>>(emptyList())
-
-    // Flujo público de solo lectura
     val postList: StateFlow<List<Post>> = _postList
 
-    // Se llama automáticamente al iniciar
     init {
         fetchPosts()
     }
 
-    // Función que obtiene los datos en segundo plano
     private fun fetchPosts() {
-        viewModelScope.launch {
+        viewModelScope.launch { // [cite: 21]
             try {
-                _postList.value = repository.getPosts()
+                _postList.value = repository.getPosts() // [cite: 21]
             } catch (e: Exception) {
-                println("Error al obtener datos: ${e.localizedMessage}")
+                // 2. CAMBIO AQUÍ: Usamos Log.e para que el error se vea ROJO en Logcat
+                Log.e("NewsViewModel", "Error al obtener datos: ${e.localizedMessage}")
             }
         }
     }

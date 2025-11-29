@@ -1,13 +1,13 @@
 package com.example.proyectologin005d.data.repository
 
 import com.example.proyectologin005d.data.model.Post
-import com.example.proyectologin005d.data.network.RetrofitInstance
+// 1. CAMBIO AQUÍ: Importamos PostRetrofit en vez de RetrofitInstance
+import com.example.proyectologin005d.data.network.PostRetrofit
 
-// Este repositorio se encarga de acceder a los datos usando Retrofit
 class NewsRepository {
 
-    // Función que obtiene los posts desde la API
     suspend fun getPosts(): List<Post> {
-        return RetrofitInstance.api.getPosts()
+        // 2. CAMBIO AQUÍ: Llamamos a la API de PostRetrofit
+        return PostRetrofit.api.getPosts()
     }
 }
