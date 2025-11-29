@@ -250,6 +250,7 @@ fun PaymentScreen(navController: NavController, cartViewModel: CartViewModel) {
 
         Button(
             onClick = {
+                cartViewModel.checkout()
                 navController.navigate("boleta")
             },
             modifier = Modifier.fillMaxWidth(),

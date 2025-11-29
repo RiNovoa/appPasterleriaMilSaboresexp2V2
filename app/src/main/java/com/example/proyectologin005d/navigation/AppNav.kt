@@ -103,7 +103,7 @@ fun AppNav(navController: NavHostController = rememberNavController()) {
             composable("contactanos") { ContactoScreen() }
             composable("productos")   { ProductosScreen(cartViewModel, navController) }
             composable("carrito")     { CarritoScreen(cartViewModel, navController) }
-            composable("historial")   { HistorialScreen(navController) }
+            composable("historial")   { HistorialScreen(navController, cartViewModel) }
             composable("perfil")      { PerfilScreen(navController) }
             composable("payment")     { PaymentScreen(navController, cartViewModel) }
 

@@ -172,8 +172,11 @@ fun EmptyCartView(navController: NavController) {
         Text("Tu carrito está vacío", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Text("Parece que todavía no has añadido nada", textAlign = TextAlign.Center, modifier = Modifier.padding(8.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { navController.navigate("productos") }) {
-            Text("Explorar productos")
+        Button(
+            onClick = { navController.navigate("productos") },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD1DC))
+        ) {
+            Text("Explorar productos", color = Color.Black)
         }
     }
 }
