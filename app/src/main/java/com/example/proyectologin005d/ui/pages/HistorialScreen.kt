@@ -1,5 +1,6 @@
 package com.example.proyectologin005d.ui.pages
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,6 +86,7 @@ fun HistorialScreen(navController: NavController, cartViewModel: CartViewModel) 
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderCard(order: Order) {
     var expanded by remember { mutableStateOf(false) }
@@ -98,7 +101,7 @@ fun OrderCard(order: Order) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Cabecera de la tarjeta
+            // Cabecera de la tarjeta (Resumen)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,27 +114,18 @@ fun OrderCard(order: Order) {
                         tint = Color(0xFFED4C67),
                         modifier = Modifier.size(24.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "Pedido #${order.id}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.DateRange,
-                                contentDescription = null,
-                                tint = Color.Gray,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = order.date,
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        }
+                        Text(
+                            text = order.date,
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -150,30 +144,86 @@ fun OrderCard(order: Order) {
                 }
             }
 
-            // Detalle expandible
-            if (expanded) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    color = Color(0xFFEEEEEE)
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Detalle expandible (Estilo Boleta)
+            AnimatedVisibility(visible = expanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                        .background(Color(0xFFFAFAFA), shape = RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    // Encabezado Boleta
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "PASTELERÍA MIL SABORES",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 14.sp,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Av. Concha y Toro 1340, Puente Alto",
+                            fontSize = 10.sp,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Lista de productos
                     order.items.forEach { item ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = "${item.quantity}x ${item.product.nombre}",
-                                fontSize = 14.sp,
-                                color = Color.DarkGray
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = item.product.nombre,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${item.quantity} x $${item.product.precio}",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
                             Text(
                                 text = "$${item.product.precio * item.quantity}",
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(thickness = 1.dp, color = Color.Black)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Totales
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("TOTAL", fontWeight = FontWeight.Bold)
+                        Text("$${order.total}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "¡Gracias por su compra!",
+                        fontSize = 12.sp,
+                        fontStyle = FontStyle.Italic,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        color = Color.Gray
+                    )
                 }
             }
         }

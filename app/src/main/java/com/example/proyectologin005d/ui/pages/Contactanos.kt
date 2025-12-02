@@ -1,5 +1,8 @@
 package com.example.proyectologin005d.ui.pages
 
+import android.view.ViewGroup
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.example.proyectologin005d.ui.pages.common.AnimatedContent
 
 @Composable
@@ -107,9 +112,45 @@ fun ContactoScreen() {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                ContactInfo(label = "Dirección:", value = "Av. Principal 123, Santiago")
+                ContactInfo(label = "Dirección:", value = "Av. Concha y Toro 1340, Puente Alto")
                 ContactInfo(label = "Teléfono:", value = "+56 9 1234 5678")
                 ContactInfo(label = "Horario:", value = "Lun-Sab 9:00 - 20:00")
+            }
+        }
+        
+        // Mapa embebido usando WebView
+        Spacer(modifier = Modifier.height(16.dp))
+        AnimatedContent {
+            Text(
+                text = "Ubicación",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp).align(Alignment.Start)
+            )
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.LightGray)
+            ) {
+                AndroidView(
+                    factory = { context ->
+                        WebView(context).apply {
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            webViewClient = WebViewClient()
+                            settings.javaScriptEnabled = true
+                            // HTML embebido con iframe de Google Maps
+                            val iframe = "<iframe src=\"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3325.661079387937!2d-70.5853926243043!3d-33.53619397335603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9662d0a103328057%3A0x6d2224550f0895c9!2sDuoc%20UC%3A%20Sede%20Puente%20Alto!5e0!3m2!1ses!2scl!4v1716414032015!5m2!1ses!2scl\" width=\"100%\" height=\"100%\" style=\"border:0;\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>"
+                            loadData(iframe, "text/html", "utf-8")
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
 
