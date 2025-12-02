@@ -21,11 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.proyectologin005d.data.local.CatalogoProductoJson
-import com.example.proyectologin005d.data.local.JsonReader
+import com.example.proyectologin005d.data.model.Producto
+import com.example.proyectologin005d.data.repository.ProductoRepository
 import com.example.proyectologin005d.ui.pages.common.AnimatedContent
 import com.example.proyectologin005d.viewmodel.CartViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 
 private fun assetUrlFromJsonPath(path: String?): String? {
     if (path.isNullOrBlank()) return null
@@ -38,12 +39,15 @@ private fun assetUrlFromJsonPath(path: String?): String? {
 @Composable
 fun ProductosScreen(cartViewModel: CartViewModel = viewModel(), navController: NavController) {
     val context = LocalContext.current
-    var productos by remember { mutableStateOf<List<CatalogoProductoJson>>(emptyList()) }
+    val repository = remember { ProductoRepository(context) }
+    var productos by remember { mutableStateOf<List<Producto>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        productos = JsonReader.cargarCatalogo(context)
+        repository.obtenerProductos().collectLatest {
+            productos = it
+        }
     }
 
     val categories = productos.mapNotNull { it.categoria }.distinct()
@@ -108,7 +112,7 @@ fun CategoryFilters(categories: List<String>, selectedCategory: String?, onCateg
 }
 
 @Composable
-fun ProductItem(p: CatalogoProductoJson, cartViewModel: CartViewModel, navController: NavController) {
+fun ProductItem(p: Producto, cartViewModel: CartViewModel, navController: NavController) {
     var added by remember { mutableStateOf(false) }
     val buttonColor by animateColorAsState(
         targetValue = if (added) Color(0xFFC8E6C9) else Color(0xFFFFD1DC),
@@ -127,6 +131,7 @@ fun ProductItem(p: CatalogoProductoJson, cartViewModel: CartViewModel, navContro
             Text(p.nombre, style = MaterialTheme.typography.titleMedium)
             Text("Precio: CLP ${p.precio}")
             Text("Categoría: ${p.categoria ?: "-"}")
+            Text("Stock: ${p.stock}")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -139,14 +144,17 @@ fun ProductItem(p: CatalogoProductoJson, cartViewModel: CartViewModel, navContro
 
                 Button(
                     onClick = {
-                        if (!added) {
+                        if (!added && p.stock > 0) {
                             cartViewModel.addToCart(p)
                             added = true
                         }
                     },
+                    enabled = p.stock > 0,
                     colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                 ) {
-                    if (added) {
+                    if (p.stock <= 0) {
+                        Text("Agotado", color = Color.Gray)
+                    } else if (added) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Check, contentDescription = "Agregado")
                             Spacer(Modifier.width(8.dp))
