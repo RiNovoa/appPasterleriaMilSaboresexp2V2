@@ -1,6 +1,7 @@
 package com.example.proyectologin005d.ui.pages
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,9 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.proyectologin005d.data.database.ProductoDataBase
 import com.example.proyectologin005d.data.local.CatalogoProductoJson
 import com.example.proyectologin005d.data.local.JsonReader
+import com.example.proyectologin005d.data.model.Resena
 import com.example.proyectologin005d.ui.pages.common.AnimatedContent
+import kotlinx.coroutines.launch
 
 private fun assetUrlFromJsonPath(path: String?): String? {
     if (path.isNullOrBlank()) return null
@@ -97,7 +101,7 @@ fun ProductDetailScreen(navController: NavController, productId: Int) {
                 HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
                 AnimatedContent {
-                    ReviewsSection()
+                    ReviewsSection(productId = p.id)
                 }
             }
         } ?: run {
@@ -109,9 +113,12 @@ fun ProductDetailScreen(navController: NavController, productId: Int) {
 }
 
 @Composable
-fun ReviewsSection() {
+fun ReviewsSection(productId: Int) {
     var rating by remember { mutableStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val database = remember { ProductoDataBase.getDatabase(context) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Calificaciones y Reseñas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -134,7 +141,21 @@ fun ReviewsSection() {
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        Button(onClick = { /* Lógica para enviar reseña */ }) {
+        Button(onClick = {
+            if (rating > 0 && reviewText.isNotBlank()) {
+                scope.launch {
+                    val resena = Resena(productId = productId, calificacion = rating, comentario = reviewText)
+                    database.resenaDao().insertResena(resena)
+                    
+                    // Reset fields and show confirmation
+                    rating = 0
+                    reviewText = ""
+                    Toast.makeText(context, "Reseña enviada", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, "Por favor, ingresa una calificación y un comentario.", Toast.LENGTH_SHORT).show()
+            }
+        }) {
             Text("Enviar reseña")
         }
         

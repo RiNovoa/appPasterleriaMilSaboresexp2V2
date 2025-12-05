@@ -5,11 +5,14 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.proyectologin005d.data.dao.ProductoDao
+import com.example.proyectologin005d.data.dao.ResenaDao
 import com.example.proyectologin005d.data.model.Producto
+import com.example.proyectologin005d.data.model.Resena
 
-@Database(entities = [Producto::class], version = 1, exportSchema = false)
+@Database(entities = [Producto::class, Resena::class], version = 2, exportSchema = false)
 abstract class ProductoDataBase : RoomDatabase() {
     abstract fun productoDao(): ProductoDao
+    abstract fun resenaDao(): ResenaDao
 
     companion object {
         @Volatile

@@ -132,7 +132,7 @@ fun ProductItem(p: Producto, cartViewModel: CartViewModel, navController: NavCon
             Text("Precio: CLP ${p.precio}")
             Text("Categoría: ${p.categoria ?: "-"}")
             Text("Stock: ${p.stock}")
-
+            Text("")
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

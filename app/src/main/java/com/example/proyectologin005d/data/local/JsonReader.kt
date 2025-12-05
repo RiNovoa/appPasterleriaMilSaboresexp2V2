@@ -1,5 +1,6 @@
 package com.example.proyectologin005d.data.local
 import android.content.Context
+import android.hardware.camera2.CameraExtensionSession
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
@@ -11,7 +12,7 @@ data class CatalogoProductoJson(
     val stock: Int,
     val imagen: String?,
     val categoria: String?,
-    val descripcion: String?
+    val descripcion: String?,
 )
 
 object JsonReader {
