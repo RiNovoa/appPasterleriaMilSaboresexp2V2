@@ -4,28 +4,30 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectologin005d.data.local.CatalogoProductoJson
+import com.example.proyectologin005d.data.model.CartItem
+import com.example.proyectologin005d.data.model.CartItemEntity
+import com.example.proyectologin005d.data.model.Order
+import com.example.proyectologin005d.data.model.OrderEntity
 import com.example.proyectologin005d.data.model.Producto
 import com.example.proyectologin005d.data.repository.ProductoRepository
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-data class CartItem(val product: Producto, val quantity: Int)
+class CartViewModel(
+    application: Application,
+    private val repository: ProductoRepository
+) : AndroidViewModel(application) {
 
-data class Order(
-    val id: Int,
-    val date: String,
-    val items: List<CartItem>,
-    val total: Int
-)
-
-class CartViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = ProductoRepository(application)
+    constructor(application: Application) : this(application, ProductoRepository(application))
     
     private val _uiState = MutableStateFlow(CartUiState())
     val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
@@ -36,23 +38,87 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     private val _lastOrder = MutableStateFlow<Order?>(null)
     val lastOrder: StateFlow<Order?> = _lastOrder.asStateFlow()
     
-    // Mapeo de ayuda si la UI sigue pasando CatalogoProductoJson (para evitar crashes)
+    init {
+        viewModelScope.launch {
+            repository.obtenerCarrito().collectLatest { cartEntities ->
+                val cartItems = mutableListOf<CartItem>()
+                cartEntities.forEach { entity ->
+                     val product = repository.obtenerProductoPorId(entity.productoId)
+                     if (product != null) {
+                         cartItems.add(CartItem(product, entity.cantidad))
+                     }
+                }
+                _uiState.update { it.copy(cart = cartItems) }
+            }
+        }
+        
+        viewModelScope.launch {
+            repository.obtenerOrdenes().collectLatest { orderEntities ->
+                val gson = Gson()
+                val type = object : TypeToken<List<CartItem>>() {}.type
+                
+                val mappedOrders = orderEntities.map { entity ->
+                    val items: List<CartItem> = try {
+                         gson.fromJson(entity.itemsJson, type)
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                    
+                    Order(
+                        id = entity.id,
+                        date = entity.date,
+                        items = items,
+                        total = entity.total
+                    )
+                }
+                _orders.value = mappedOrders
+            }
+        }
+        
+        viewModelScope.launch {
+            repository.obtenerUltimaOrden().collectLatest { entity ->
+                if (entity != null) {
+                    val gson = Gson()
+                    val type = object : TypeToken<List<CartItem>>() {}.type
+                    val items: List<CartItem> = try {
+                         gson.fromJson(entity.itemsJson, type)
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                    
+                    _lastOrder.value = Order(
+                        id = entity.id,
+                        date = entity.date,
+                        items = items,
+                        total = entity.total
+                    )
+                }
+            }
+        }
+    }
+    
     fun addToCart(productJson: CatalogoProductoJson) {
         val product = Producto.fromJson(productJson)
         addToCart(product)
     }
     
     fun addToCart(product: Producto) {
-        _uiState.update { currentState ->
-            val cart = currentState.cart.toMutableList()
-            val existingItem = cart.find { it.product.id == product.id }
+        viewModelScope.launch {
+            // Verificar si ya está en el carrito para sumar cantidad
+            val currentCart = _uiState.value.cart
+            val existingItem = currentCart.find { it.product.id == product.id }
+            
             if (existingItem != null) {
-                val index = cart.indexOf(existingItem)
-                cart[index] = existingItem.copy(quantity = existingItem.quantity + 1)
+                // En la base de datos local, por simplicidad, eliminamos y agregamos con nueva cantidad
+                // O idealmente CartDao debería tener update o upsert.
+                // Como CartItemEntity no tiene ID único fijo aparte de autogenerado, 
+                // es mejor borrar por productoId y agregar de nuevo o buscar la entidad.
+                // Sin embargo, para simplificar:
+                repository.eliminarDelCarrito(product.id)
+                repository.agregarAlCarrito(CartItemEntity(productoId = product.id, cantidad = existingItem.quantity + 1))
             } else {
-                cart.add(CartItem(product, 1))
+                repository.agregarAlCarrito(CartItemEntity(productoId = product.id, cantidad = 1))
             }
-            currentState.copy(cart = cart)
         }
     }
 
@@ -62,24 +128,22 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun removeFromCart(product: Producto) {
-        _uiState.update { currentState ->
-            val cart = currentState.cart.toMutableList()
-            val existingItem = cart.find { it.product.id == product.id }
-            if (existingItem != null) {
-                if (existingItem.quantity > 1) {
-                    val index = cart.indexOf(existingItem)
-                    cart[index] = existingItem.copy(quantity = existingItem.quantity - 1)
-                } else {
-                    cart.remove(existingItem)
-                }
+        viewModelScope.launch {
+             val currentCart = _uiState.value.cart
+            val existingItem = currentCart.find { it.product.id == product.id }
+            
+            if (existingItem != null && existingItem.quantity > 1) {
+                 repository.eliminarDelCarrito(product.id)
+                 repository.agregarAlCarrito(CartItemEntity(productoId = product.id, cantidad = existingItem.quantity - 1))
+            } else {
+                repository.eliminarDelCarrito(product.id)
             }
-            currentState.copy(cart = cart)
         }
     }
 
     fun clearCart() {
-        _uiState.update { currentState ->
-            currentState.copy(cart = emptyList())
+        viewModelScope.launch {
+            repository.vaciarCarrito()
         }
     }
 
@@ -88,19 +152,19 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         if (currentState.cart.isNotEmpty()) {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             val currentDate = sdf.format(Date())
-            val orderNumber = (1000..9999).random()
+            
+            val gson = Gson()
+            val itemsJson = gson.toJson(currentState.cart)
 
-            val newOrder = Order(
-                id = orderNumber,
+            val newOrder = OrderEntity(
                 date = currentDate,
-                items = currentState.cart,
-                total = currentState.total
+                total = currentState.total,
+                itemsJson = itemsJson
             )
 
-            _orders.update { it + newOrder }
-            _lastOrder.value = newOrder
-            
             viewModelScope.launch {
+                repository.guardarOrden(newOrder)
+                
                 currentState.cart.forEach { item ->
                     val currentProduct = repository.obtenerProductoPorId(item.product.id)
                     if (currentProduct != null) {
@@ -110,6 +174,8 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
+                
+                 repository.vaciarCarrito()
             }
         }
     }

@@ -33,7 +33,7 @@ class LoginViewModel(app: Application) : AndroidViewModel(app) {
             val ok = repo.login(s.username.trim(), s.password)
             if (ok) {
                 // Guardar datos en SharedPreferences al loguearse
-                saveUserData(s.username.trim(), "user@example.com") // Aqui deberías pasar el email real
+                saveUserData(s.username.trim(), s.username.trim()) // Usamos el correo como identificador
 
                 _ui.value = _ui.value.copy(isLoading = false, isLogged = true)
                 onSuccess(s.username.trim())

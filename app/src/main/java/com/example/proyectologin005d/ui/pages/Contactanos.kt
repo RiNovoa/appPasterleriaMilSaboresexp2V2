@@ -3,6 +3,7 @@ package com.example.proyectologin005d.ui.pages
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,12 +25,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.proyectologin005d.data.database.ProductoDataBase
+import com.example.proyectologin005d.data.model.ContactMessage
 import com.example.proyectologin005d.ui.pages.common.AnimatedContent
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ContactoScreen() {
     val scrollState = rememberScrollState()
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val database = remember { ProductoDataBase.getDatabase(context) }
 
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -91,7 +102,30 @@ fun ContactoScreen() {
 
         AnimatedContent {
             Button(
-                onClick = { /* Aquí puedes manejar el envío */ },
+                onClick = { 
+                    if (nombre.isNotBlank() && email.isNotBlank() && mensaje.isNotBlank()) {
+                        scope.launch {
+                            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                            val currentDate = sdf.format(Date())
+                            
+                            val contactMessage = ContactMessage(
+                                nombre = nombre,
+                                email = email,
+                                mensaje = mensaje,
+                                fecha = currentDate
+                            )
+                            database.contactDao().insertMessage(contactMessage)
+                            
+                            // Reset fields and show confirmation
+                            nombre = ""
+                            email = ""
+                            mensaje = ""
+                            Toast.makeText(context, "Mensaje enviado correctamente", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 modifier = Modifier
                     .padding(vertical = 12.dp)
                     .fillMaxWidth(),

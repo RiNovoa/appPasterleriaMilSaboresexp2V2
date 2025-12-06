@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.History
@@ -22,9 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.proyectologin005d.ui.pages.common.AnimatedContent
 import com.example.proyectologin005d.viewmodel.CartViewModel
-import com.example.proyectologin005d.viewmodel.Order
+import com.example.proyectologin005d.data.model.Order
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
