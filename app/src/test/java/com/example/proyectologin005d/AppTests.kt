@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.proyectologin005d.data.model.Post
 import com.example.proyectologin005d.data.network.PostApiService
 import com.example.proyectologin005d.data.network.PostRetrofit
+import com.example.proyectologin005d.data.repository.NewsRepository
 import com.example.proyectologin005d.data.repository.ProductoRepository
 import com.example.proyectologin005d.util.ValidationUtils
 import com.example.proyectologin005d.viewmodel.CartViewModel
@@ -15,6 +16,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +32,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import android.util.Log
 
 // Fábrica de prueba para inyectar dependencias mockeadas
 class TestViewModelFactory(
     private val application: Application,
-    private val repository: ProductoRepository
+    private val repository: ProductoRepository,
+    private val newsRepository: NewsRepository // Add NewsRepository to factory
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -43,6 +47,12 @@ class TestViewModelFactory(
                 CartViewModel(application, repository) as T
             }
             modelClass.isAssignableFrom(NewsViewModel::class.java) -> {
+                // Use reflection to set the private repository field or use a constructor if refactored.
+                // Since we cannot change NewsViewModel constructor easily without breaking Dagger/Hilt or manual DI elsewhere if not prepared,
+                // we will use the mocked Retrofit which NewsRepository uses internally.
+                // Wait, NewsViewModel instantiates NewsRepository internally: private val repository = NewsRepository()
+                // And NewsRepository uses PostRetrofit.api directly.
+                // So mocking PostRetrofit object IS the way to go.
                 NewsViewModel() as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class")
@@ -61,6 +71,8 @@ class AppTests {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        mockkStatic(Log::class)
+        every { Log.e(any(), any()) } returns 0
     }
 
     @After
@@ -125,13 +137,14 @@ class AppTests {
     private fun createMockViewModelFactory(): TestViewModelFactory {
         val app = mockk<Application>(relaxed = true)
         val repo = mockk<ProductoRepository>(relaxed = true)
+        val newsRepo = mockk<NewsRepository>(relaxed = true)
         
         // Mocks de flujos vacíos por defecto para evitar NullPointerException
         every { repo.obtenerCarrito() } returns MutableStateFlow(emptyList())
         every { repo.obtenerOrdenes() } returns MutableStateFlow(emptyList())
         every { repo.obtenerUltimaOrden() } returns MutableStateFlow(null)
         
-        return TestViewModelFactory(app, repo)
+        return TestViewModelFactory(app, repo, newsRepo)
     }
 
     @Test
@@ -155,7 +168,7 @@ class AppTests {
 
         // Mockear el singleton PostRetrofit
         mockkObject(PostRetrofit)
-        coEvery { PostRetrofit.api } returns mockApi
+        every { PostRetrofit.api } returns mockApi
 
         // Iniciar ViewModel usando la fábrica
         val factory = createMockViewModelFactory()
@@ -175,7 +188,7 @@ class AppTests {
         coEvery { mockApi.getPosts() } throws Exception("API Error")
 
         mockkObject(PostRetrofit)
-        coEvery { PostRetrofit.api } returns mockApi
+        every { PostRetrofit.api } returns mockApi
 
         val factory = createMockViewModelFactory()
         val viewModel = factory.create(NewsViewModel::class.java)
