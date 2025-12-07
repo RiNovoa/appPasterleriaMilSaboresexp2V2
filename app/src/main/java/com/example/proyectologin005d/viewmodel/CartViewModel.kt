@@ -38,6 +38,12 @@ class CartViewModel(
     private val _lastOrder = MutableStateFlow<Order?>(null)
     val lastOrder: StateFlow<Order?> = _lastOrder.asStateFlow()
     
+    private val _discountCode = MutableStateFlow("")
+    val discountCode: StateFlow<String> = _discountCode.asStateFlow()
+
+    private val _discountPercentage = MutableStateFlow(0.0)
+    val discountPercentage: StateFlow<Double> = _discountPercentage.asStateFlow()
+
     init {
         viewModelScope.launch {
             repository.obtenerCarrito().collectLatest { cartEntities ->
@@ -147,8 +153,21 @@ class CartViewModel(
         }
     }
 
+    fun applyCoupon(code: String) {
+        _discountCode.value = code
+        if (code.trim().equals("Pasteleria50", ignoreCase = true)) {
+            _discountPercentage.value = 0.30 // 30% de descuento
+        } else {
+            _discountPercentage.value = 0.0
+        }
+    }
+
     fun checkout() {
         val currentState = _uiState.value
+        val subtotal = currentState.total
+        val discount = (subtotal * _discountPercentage.value).toInt()
+        val finalTotal = subtotal - discount
+
         if (currentState.cart.isNotEmpty()) {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             val currentDate = sdf.format(Date())
@@ -158,7 +177,7 @@ class CartViewModel(
 
             val newOrder = OrderEntity(
                 date = currentDate,
-                total = currentState.total,
+                total = finalTotal,
                 itemsJson = itemsJson
             )
 
@@ -176,6 +195,8 @@ class CartViewModel(
                 }
                 
                  repository.vaciarCarrito()
+                 _discountCode.value = ""
+                 _discountPercentage.value = 0.0
             }
         }
     }

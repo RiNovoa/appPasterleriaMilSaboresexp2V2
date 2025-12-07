@@ -15,11 +15,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectologin005d.viewmodel.CartViewModel
@@ -86,11 +88,16 @@ fun PaymentScreen(navController: NavController, cartViewModel: CartViewModel) {
     var expiryDate by remember { mutableStateOf("") }
     var cvv by remember { mutableStateOf("") }
     var isCvvFocused by remember { mutableStateOf(false) }
+    var discountCodeInput by remember { mutableStateOf("") }
 
     var cardNameError by remember { mutableStateOf<String?>(null) }
     var cardNumberError by remember { mutableStateOf<String?>(null) }
     var expiryDateError by remember { mutableStateOf<String?>(null) }
     var cvvError by remember { mutableStateOf<String?>(null) }
+
+    val appliedPercentage by cartViewModel.discountPercentage.collectAsState()
+    val appliedCode by cartViewModel.discountCode.collectAsState()
+    val uiState by cartViewModel.uiState.collectAsState()
 
     val isFormValid by remember {
         derivedStateOf {
@@ -141,7 +148,7 @@ fun PaymentScreen(navController: NavController, cartViewModel: CartViewModel) {
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
         Card(
             modifier = Modifier
@@ -247,6 +254,59 @@ fun PaymentScreen(navController: NavController, cartViewModel: CartViewModel) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Sección de cupón de descuento
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Cupón de descuento", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = discountCodeInput,
+                        onValueChange = { discountCodeInput = it },
+                        label = { Text("Código") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = { cartViewModel.applyCoupon(discountCodeInput) }) {
+                        Text("Aplicar")
+                    }
+                }
+                
+                if (appliedPercentage > 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "¡Descuento del ${(appliedPercentage * 100).toInt()}% aplicado!",
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Subtotal:")
+                    Text("$${uiState.total}")
+                }
+                if (appliedPercentage > 0) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Descuento:", color = Color(0xFF4CAF50))
+                        Text("-$${(uiState.total * appliedPercentage).toInt()}", color = Color(0xFF4CAF50))
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Total a Pagar:", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    val finalTotal = (uiState.total * (1 - appliedPercentage)).toInt()
+                    Text("$$finalTotal", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
