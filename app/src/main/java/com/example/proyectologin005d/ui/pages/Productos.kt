@@ -7,16 +7,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -41,8 +47,8 @@ fun ProductosScreen(cartViewModel: CartViewModel = viewModel(), navController: N
     val context = LocalContext.current
     val repository = remember { ProductoRepository(context) }
     var productos by remember { mutableStateOf<List<Producto>>(emptyList()) }
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         repository.obtenerProductos().collectLatest {
@@ -54,7 +60,7 @@ fun ProductosScreen(cartViewModel: CartViewModel = viewModel(), navController: N
 
     val filteredProducts = productos.filter {
         (selectedCategory == null || it.categoria == selectedCategory) &&
-                (searchQuery.isBlank() || it.nombre.contains(searchQuery, ignoreCase = true))
+                (searchQuery.isBlank() || it.nombre.contains(searchQuery.trim(), ignoreCase = true))
     }
 
     Scaffold(
@@ -65,11 +71,26 @@ fun ProductosScreen(cartViewModel: CartViewModel = viewModel(), navController: N
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).animateContentSize()) {
-            SearchBar(searchQuery, onQueryChange = { searchQuery = it })
+            ProductSearchField(
+                query = searchQuery, 
+                onQueryChange = { searchQuery = it },
+                onClear = { searchQuery = "" }
+            )
             CategoryFilters(categories, selectedCategory) { selectedCategory = it }
-            LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                items(filteredProducts, key = { it.id }) { p ->
-                    ProductItem(p, cartViewModel, navController)
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                if (filteredProducts.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Text("No se encontraron productos", color = Color.Gray)
+                        }
+                    }
+                } else {
+                    items(filteredProducts, key = { it.id }) { p ->
+                        ProductItem(p, cartViewModel, navController)
+                    }
                 }
             }
         }
@@ -78,15 +99,27 @@ fun ProductosScreen(cartViewModel: CartViewModel = viewModel(), navController: N
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+fun ProductSearchField(query: String, onQueryChange: (String) -> Unit, onClear: () -> Unit) {
+    val focusManager = LocalFocusManager.current
+    
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         label = { Text("Buscar producto") },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = onClear) {
+                    Icon(Icons.Default.Close, contentDescription = "Borrar")
+                }
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
     )
 }
 
@@ -132,7 +165,7 @@ fun ProductItem(p: Producto, cartViewModel: CartViewModel, navController: NavCon
             Text("Precio: CLP ${p.precio}")
             Text("Categoría: ${p.categoria ?: "-"}")
             Text("Stock: ${p.stock}")
-            Text("")
+            Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

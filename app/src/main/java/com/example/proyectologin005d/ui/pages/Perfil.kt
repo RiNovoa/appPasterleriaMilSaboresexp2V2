@@ -78,146 +78,164 @@ fun PerfilScreen(navController: NavController) {
     }
 
     LaunchedEffect(Unit) {
-        authRepository.getSessionUsername()?.let {
-            user = authRepository.getUserByUsername(it)
+        val username = authRepository.getSessionUsername()
+        if (username != null) {
+            user = authRepository.getUserByUsername(username)
+        } else {
+            // Si no hay usuario logueado, redirigir al login
+             navController.navigate("login") { popUpTo(0) { inclusive = true } }
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = cs.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+    if (user != null) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = cs.background
         ) {
-            AnimatedContent { 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(4.dp),
-                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AnimatedContent {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant)
                     ) {
-                        val imageModifier = Modifier
-                            .size(130.dp)
-                            .clip(CircleShape)
-                            .border(4.dp, cs.primary, CircleShape)
-                            .background(cs.secondary.copy(alpha = 0.1f))
-
-                        if (imageBitmap != null) {
-                            Image(
-                                bitmap = imageBitmap!!.asImageBitmap(),
-                                contentDescription = "Foto de perfil",
-                                modifier = imageModifier,
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(R.drawable.ic_default_profile),
-                                contentDescription = "Foto de perfil por defecto",
-                                modifier = imageModifier.padding(12.dp)
-                            )
-                        }
-
-                        Spacer(Modifier.height(20.dp))
-
-                        Text(
-                            text = user?.nombre ?: "Nombre de Usuario",
-                            style = ty.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = cs.onSurfaceVariant
-                        )
-
-                        Text(
-                            text = user?.correo ?: "correo@ejemplo.com",
-                            style = ty.bodyMedium,
-                            color = cs.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-
-                        Spacer(Modifier.height(24.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
-                                Icon(Icons.Default.PhotoLibrary, contentDescription = "Galería", Modifier.size(18.dp))
-                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text("Galería")
+                            val imageModifier = Modifier
+                                .size(130.dp)
+                                .clip(CircleShape)
+                                .border(4.dp, cs.primary, CircleShape)
+                                .background(cs.secondary.copy(alpha = 0.1f))
+
+                            if (imageBitmap != null) {
+                                Image(
+                                    bitmap = imageBitmap!!.asImageBitmap(),
+                                    contentDescription = "Foto de perfil",
+                                    modifier = imageModifier,
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_default_profile),
+                                    contentDescription = "Foto de perfil por defecto",
+                                    modifier = imageModifier.padding(12.dp)
+                                )
                             }
-                            Button(onClick = {
-                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                    cameraLauncher.launch()
-                                } else {
-                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+
+                            Spacer(Modifier.height(20.dp))
+
+                            Text(
+                                text = "${user!!.nombre} ${user!!.apellido}",
+                                style = ty.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = cs.onSurfaceVariant
+                            )
+
+                            Text(
+                                text = user!!.correo,
+                                style = ty.bodyMedium,
+                                color = cs.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                            
+                            Spacer(Modifier.height(8.dp))
+                             Text(
+                                text = "Dirección: ${user!!.direccion ?: "No registrada"}",
+                                style = ty.bodyMedium,
+                                color = cs.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+
+                            Spacer(Modifier.height(24.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+                            ) {
+                                OutlinedButton(onClick = { galleryLauncher.launch("image/*") }) {
+                                    Icon(Icons.Default.PhotoLibrary, contentDescription = "Galería", Modifier.size(18.dp))
+                                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                    Text("Galería")
                                 }
-                            }) {
-                                Icon(Icons.Default.CameraAlt, contentDescription = "Cámara", Modifier.size(18.dp))
-                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text("Cámara")
+                                Button(onClick = {
+                                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                        cameraLauncher.launch()
+                                    } else {
+                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                    }
+                                }) {
+                                    Icon(Icons.Default.CameraAlt, contentDescription = "Cámara", Modifier.size(18.dp))
+                                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                    Text("Cámara")
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
-            AnimatedContent { 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(2.dp),
-                    colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.6f))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Beneficios Activos",
-                            style = ty.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = cs.primary,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        HorizontalDivider(color = cs.outline.copy(alpha = 0.5f))
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = "• 10% de descuento permanente (CUPÓN: FELICES50)\n• Regalo especial de cumpleaños al registrar correo Duoc.",
-                            style = ty.bodyMedium,
-                            lineHeight = 24.sp,
-                            color = cs.onSurfaceVariant
-                        )
+                AnimatedContent {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(2.dp),
+                        colors = CardDefaults.cardColors(containerColor = cs.surfaceVariant.copy(alpha = 0.6f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Beneficios Activos",
+                                style = ty.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = cs.primary,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            HorizontalDivider(color = cs.outline.copy(alpha = 0.5f))
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                text = "• 10% de descuento permanente (CUPÓN: FELICES50)\n• Regalo especial de cumpleaños al registrar correo Duoc.",
+                                style = ty.bodyMedium,
+                                lineHeight = 24.sp,
+                                color = cs.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(32.dp))
+
+                AnimatedContent {
+                    val scope = rememberCoroutineScope()
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                authRepository.logout()
+                                navController.navigate("login") { popUpTo(0) { inclusive = true } }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = cs.errorContainer,
+                            contentColor = cs.onErrorContainer
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(50.dp)
+                    ) {
+                        Text("Cerrar Sesión", style = ty.titleMedium)
                     }
                 }
             }
-
-            Spacer(Modifier.height(32.dp))
-
-            AnimatedContent {
-                val scope = rememberCoroutineScope()
-                Button(
-                    onClick = {
-                        scope.launch {
-                            authRepository.logout()
-                            navController.navigate("login") { popUpTo(0) { inclusive = true } }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = cs.errorContainer,
-                        contentColor = cs.onErrorContainer
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(50.dp)
-                ) {
-                    Text("Cerrar Sesión", style = ty.titleMedium)
-                }
-            }
+        }
+    } else {
+        // Pantalla de carga mientras se obtiene el usuario
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
     }
 }
